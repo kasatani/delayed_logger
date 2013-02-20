@@ -4,6 +4,23 @@ require 'logger'
 class DelayedLogger
   attr_accessor :delayed_level
   
+  # Logging severity.
+  module Severity
+    # Low-level information, mostly for developers
+    DEBUG = 0
+    # generic, useful information about system operation
+    INFO = 1
+    # a warning
+    WARN = 2
+    # a handleable error condition
+    ERROR = 3
+    # an unhandleable error that results in a program crash
+    FATAL = 4
+    # an unknown message that should always be logged
+    UNKNOWN = 5
+  end
+  include Severity
+  
   def initialize(logger = nil)
     if logger.nil?
       logger = Logger.new(STDOUT)
@@ -70,6 +87,12 @@ class DelayedLogger
   def method_missing(meth, *args, &block)
     @logger.send(meth, *args, &block)
   end
+
+  def debug?; @delayed_level <= DEBUG; end
+  def info?; @delayed_level <= INFO; end
+  def warn?; @delayed_level <= WARN; end
+  def error?; @delayed_level <= ERROR; end
+  def fatal?; @delayed_level <= FATAL; end
 
   def debug(progname = nil, &block)
     add(Logger::DEBUG, nil, progname, &block)
