@@ -48,5 +48,20 @@ describe DelayedLogger do
         output.string.should match(/bar/)
       end
     end
+
+    describe 'when limited to 10 entries, with many logs' do
+      before do
+        logger.max_lines = 10
+        15.times {|i| logger.debug("line #{i}") }
+      end
+
+      it 'should have 10 entries' do
+        logger.delayed_logs.size.should == 10
+      end
+
+      it 'should have newest log entry' do
+        logger.delayed_logs.last.should match(/line 14/)
+      end
+    end
   end
 end

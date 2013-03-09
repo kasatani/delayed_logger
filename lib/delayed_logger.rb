@@ -2,7 +2,8 @@ require "delayed_logger/version"
 require 'logger'
 
 class DelayedLogger
-  attr_accessor :delayed_level
+  attr_accessor :delayed_level, :max_lines
+  attr_reader :delayed_logs
   
   # Logging severity.
   module Severity
@@ -29,6 +30,7 @@ class DelayedLogger
     @logger = logger
     @delayed = false
     @delayed_level = Logger::DEBUG
+    @max_lines = 1000
   end
 
   def capture
@@ -42,18 +44,18 @@ class DelayedLogger
 
   def flush_captured_logs
     @logger.add(@logger.level, 'DelayedLogger: BEGIN flushing captured logs')
-    @logger << @delayed_logs
+    @logger << @delayed_logs.join
     @logger.add(@logger.level, 'DelayedLogger: END flushing captured logs')
   end
 
   def start_capture
-    @delayed_logs = ""
+    @delayed_logs = []
     @delayed = true
     nil
   end
 
   def end_capture
-    @delayed_logs = ""
+    @delayed_logs = []
     @delayed = false
     nil
   end
@@ -78,6 +80,7 @@ class DelayedLogger
         Time.now,
         progname,
         message)
+      @delayed_logs.shift if @delayed_logs.size > @max_lines
     else
       @logger.add(severity, message, progname, &block)
     end
